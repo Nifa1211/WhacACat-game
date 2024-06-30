@@ -1,0 +1,40 @@
+@import url(https://fonts.googleapis.com/css?family=Space+Mono:regular,italic,700,700italic);
+body {
+    font-family:'Space Mono',Arial, Helvetica, sans-serif;
+    text-align: center;
+    background: url("./Cat-Bg.jpg");
+    background-size: cover;
+}
+
+#board {
+    width: 540px;
+    height: 540px;
+
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+
+    background: url("./Soil.jpg");
+    background-size: cover;
+    border: 3px solid black;
+    border-radius: 25px;
+}
+
+#board div {
+    width: 180px; 
+    height: 180px;
+    background-image: url("./pipe.png");
+    background-size: cover;
+}
+
+#board div img {
+   
+    width: 100px;
+    height: 100px;
+
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
