@@ -1,40 +1,277 @@
-@import url(https://fonts.googleapis.com/css?family=Space+Mono:regular,italic,700,700italic);
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --score-color: #FFD700;
+  --danger:      #FF4444;
+  --hole-size:   160px;
+  --gap:         12px;
+}
+
+/* ── Body & background ─────────────────────────────────────────────────── */
 body {
-    font-family:'Space Mono',Arial, Helvetica, sans-serif;
-    text-align: center;
-    background: url("./Cat-Bg.jpg");
-    background-size: cover;
+  font-family: 'Space Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: url('./Assets/Bg.jpg') center / cover no-repeat fixed;
+  overflow: hidden;
+  user-select: none;
 }
 
+/* Dark overlay on top of Cat-Bg for readability */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 5, 30, 0.55);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Game wrapper ──────────────────────────────────────────────────────── */
+.game-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── Title ─────────────────────────────────────────────────────────────── */
+h1 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3);
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(255,215,0,0.6), 0 0 40px rgba(255,215,0,0.3); }
+  50%       { text-shadow: 0 0 30px rgba(255,215,0,0.9), 0 0 60px rgba(255,215,0,0.5); }
+}
+
+/* ── Score display ─────────────────────────────────────────────────────── */
+#score-display {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--score-color);
+  letter-spacing: 2px;
+  min-height: 2.5rem;
+  transition: color 0.3s;
+}
+
+#score-display.game-over {
+  color: var(--danger);
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-6px); }
+  80%       { transform: translateX(6px); }
+}
+
+/* ── Board ─────────────────────────────────────────────────────────────── */
 #board {
-    width: 540px;
-    height: 540px;
-
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-
-    background: url("./Soil.jpg");
-    background-size: cover;
-    border: 3px solid black;
-    border-radius: 25px;
+  display: grid;
+  grid-template-columns: repeat(3, var(--hole-size));
+  grid-template-rows:    repeat(3, var(--hole-size));
+  gap: var(--gap);
+  padding: 24px;
+  background: url('./Assets/Soil.jpg') center / cover no-repeat;
+  border-radius: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-#board div {
-    width: 180px; 
-    height: 180px;
-    background-image: url("./pipe.png");
-    background-size: cover;
+/* ── Tiles (holes) ─────────────────────────────────────────────────────── */
+.tile {
+  width: var(--hole-size);
+  height: var(--hole-size);
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+  background: url('./Assets/pipe.png') center / cover no-repeat,
+              radial-gradient(ellipse at 40% 35%, #2a1205 0%, #0d0600 60%, #000 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8), inset 0 -3px 8px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: transform 0.1s;
 }
 
-#board div img {
-   
-    width: 100px;
-    height: 100px;
+.tile:hover  { transform: scale(1.03); }
+.tile:active { transform: scale(0.97); }
 
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-drag: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+/* Hole rim ring */
+.tile::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 3px solid rgba(139, 90, 43, 0.6);
+  pointer-events: none;
 }
+
+/* ── Mole / plant image inside tile ───────────────────────────────────── */
+.tile img {
+  position: absolute;
+  bottom: -110%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  transition: bottom 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Slide up when active */
+.tile.has-mole img,
+.tile.has-plant img {
+  bottom: 10%;
+}
+
+/* Whack animation */
+.tile.whacked img {
+  animation: whack 0.3s ease forwards;
+}
+
+@keyframes whack {
+  0%   { transform: translateX(-50%) scale(1); }
+  30%  { transform: translateX(-50%) scale(1.25) rotate(-8deg); }
+  60%  { transform: translateX(-50%) scale(0.8)  rotate(5deg); }
+  100% { transform: translateX(-50%) scale(0)    rotate(20deg); bottom: -110%; }
+}
+
+/* ── Score pop-up ──────────────────────────────────────────────────────── */
+.score-pop {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--score-color);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  animation: popUp 0.6s ease forwards;
+  z-index: 10;
+}
+
+@keyframes popUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(0.8); }
+  40%  { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(0.9); }
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+button {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+button:hover  { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.6); }
+button:active { transform: scale(0.96); }
+
+button#btn-start,
+button#btn-overlay-start {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: #4CAF50;
+}
+
+button#btn-start:hover,
+button#btn-overlay-start:hover {
+  background: rgba(76, 175, 80, 0.5);
+}
+
+/* ── Legend ────────────────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 20px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.legend span { display: flex; align-items: center; gap: 6px; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.mole  { background: #FFD700; }
+.dot.plant { background: #FF4444; }
+
+/* ── Start / Game-over overlay ─────────────────────────────────────────── */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+#overlay h2 {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 3px;
+  text-align: center;
+}
+
+#overlay p {
+  font-family: 'Space Mono', monospace;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+}
+
+#overlay button {
+  font-size: 1rem;
+  padding: 14px 36px;
+  margin-top: 8px;
+}
+
+#overlay.hidden { display: none; }
